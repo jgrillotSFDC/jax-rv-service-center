@@ -46,5 +46,30 @@ jobs:
       - name: Verify authenticated org
         run: sf org list --all
 
+      - name: Build Apex test class list
+        id: apex-tests
+        run: |
+          mapfile -t test_files < <(find force-app -type f -name '*TEST*.cls' | sort)
+
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "No Apex test classes matching '*TEST*.cls' were found in force-app."
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "test_classes=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          test_classes=$(printf '%s\n' "${test_files[@]}" \
+            | sed -E 's|.*/([^/]+)\.cls$|\1|' \
+            | paste -sd, -)
+
+          echo "Found Apex test classes: $test_classes"
+          echo "has_tests=true" >> "$GITHUB_OUTPUT"
+          echo "test_classes=$test_classes" >> "$GITHUB_OUTPUT"
+
       - name: Validate build
-        run: sf project deploy start --dry-run --test-level ${{ vars.TEST_LEVEL }} --target-org sandbox --source-dir force-app
+        run: |
+          if [ "${{ steps.apex-tests.outputs.has_tests }}" = "true" ]; then
+            sf project deploy start --dry-run --test-level RunSpecifiedTests --tests "${{ steps.apex-tests.outputs.test_classes }}" --target-org sandbox --source-dir force-app
+          else
+            sf project deploy start --dry-run --test-level "${{ vars.TEST_LEVEL }}" --target-org sandbox --source-dir force-app
+          fi
