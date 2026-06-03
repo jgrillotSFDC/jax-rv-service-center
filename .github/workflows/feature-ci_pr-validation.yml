@@ -1,0 +1,49 @@
+name: feature-ci_pr-validation
+
+on:
+  pull_request:
+    branches:
+      - "develop"
+
+jobs:
+  pr-validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Salesforce CLI
+        run: npm install --global @salesforce/cli
+
+      - name: Install sfdx-git-delta plugin
+        run: sf plugins install sfdx-git-delta
+
+      - name: Authenticate to sandbox org (SFDX URL)
+        env:
+          SFDX_URL: ${{ secrets.SFDX_URL }}
+        run: |
+          if [ -z "$SFDX_URL" ]; then
+            echo "Missing required secret: SFDX_URL"
+            exit 1
+          fi
+
+          echo "$SFDX_URL" > ./sfdx_auth_url.txt
+          sf org login sfdx-url \
+            --sfdx-url-file ./sfdx_auth_url.txt \
+            --alias sandbox \
+            --set-default
+          rm -f ./sfdx_auth_url.txt
+
+      - name: Verify authenticated org
+        run: sf org list --all
+
+      - name: Validate build
+        run: sf project deploy start --dry-run --test-level ${{ env.TEST_LEVEL }} --target-org sandbox --source-dir force-app
