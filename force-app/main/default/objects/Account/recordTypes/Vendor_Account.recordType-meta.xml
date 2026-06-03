@@ -5,29 +5,6 @@
     <description>Accounts we purchase from and manufacturers</description>
     <label>Vendor Account</label>
     <picklistValues>
-        <picklist>AccountSource</picklist>
-        <values>
-            <fullName>Other</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Partner Referral</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Phone Inquiry</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Purchased List</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Web</fullName>
-            <default>false</default>
-        </values>
-    </picklistValues>
-    <picklistValues>
         <picklist>Industry</picklist>
         <values>
             <fullName>Agriculture</fullName>
@@ -86,19 +63,11 @@
             <default>false</default>
         </values>
         <values>
-            <fullName>Finance</fullName>
-            <default>false</default>
-        </values>
-        <values>
             <fullName>Food %26 Beverage</fullName>
             <default>false</default>
         </values>
         <values>
             <fullName>Government</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Healthcare</fullName>
             <default>false</default>
         </values>
         <values>
@@ -195,15 +164,11 @@
     <picklistValues>
         <picklist>Type</picklist>
         <values>
-            <fullName>Channel Partner %2F Reseller</fullName>
+            <fullName>Reseller</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Customer - Channel</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Customer - Direct</fullName>
+            <fullName>Customer</fullName>
             <default>false</default>
         </values>
         <values>
