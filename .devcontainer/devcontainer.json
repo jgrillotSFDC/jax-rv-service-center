@@ -1,0 +1,31 @@
+{
+  "name": "jax-rv-service-center",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "node",
+  "updateRemoteUserUID": true,
+  "mounts": [
+    "source=sf-cli-state,target=/home/node/.sf,type=volume",
+    "source=sfdx-cli-state,target=/home/node/.sfdx,type=volume"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "salesforce.salesforcedx-vscode",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "search.exclude": {
+          "**/.sf": true,
+          "**/.sfdx": true
+        }
+      }
+    }
+  },
+  "postCreateCommand": "npm install",
+  "postStartCommand": "sf --version"
+}
