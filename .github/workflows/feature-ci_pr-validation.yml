@@ -47,4 +47,4 @@ jobs:
         run: sf org list --all
 
       - name: Validate build
-        run: sf project deploy start --dry-run --test-level ${{ env.TEST_LEVEL }} --target-org sandbox --source-dir force-app
+        run: sf project deploy start --dry-run --test-level ${{ vars.TEST_LEVEL }} --target-org sandbox --source-dir force-app
