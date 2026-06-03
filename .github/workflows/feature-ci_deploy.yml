@@ -2,7 +2,7 @@
 name: feature-ci_deploy
 
 on:
-  pull_request:
+  push:
     branches:
       - "develop"
 
