@@ -10,6 +10,10 @@ RUN apt-get update \
 
 RUN npm install --global @salesforce/cli
 
+RUN JAVA_BIN_PATH="$(readlink -f "$(command -v java)")" \
+    && JAVA_HOME_PATH="$(dirname "$(dirname "${JAVA_BIN_PATH}")")" \
+    && ln -sfn "${JAVA_HOME_PATH}" /usr/lib/jvm/default-java
+
 ENV JAVA_HOME=/usr/lib/jvm/default-java
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
