@@ -5,6 +5,29 @@
     <description>Commercial Customer Accounts</description>
     <label>Commercial Customer</label>
     <picklistValues>
+        <picklist>AccountSource</picklist>
+        <values>
+            <fullName>Other</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Partner Referral</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Phone Inquiry</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Purchased List</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Web</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>Industry</picklist>
         <values>
             <fullName>Agriculture</fullName>
@@ -164,10 +187,6 @@
     <picklistValues>
         <picklist>Type</picklist>
         <values>
-            <fullName>Reseller</fullName>
-            <default>false</default>
-        </values>
-        <values>
             <fullName>Customer</fullName>
             <default>false</default>
         </values>
@@ -181,6 +200,10 @@
         </values>
         <values>
             <fullName>Prospect</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Reseller</fullName>
             <default>false</default>
         </values>
         <values>
