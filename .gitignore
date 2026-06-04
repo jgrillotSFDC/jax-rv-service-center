@@ -50,3 +50,7 @@ $RECYCLE.BIN/
 # VSCode
 .vscode/
 package-lock.json
+
+# Salesforce Org Metadata
+**/profiles/
+**/AppMenus/
