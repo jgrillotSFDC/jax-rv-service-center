@@ -1,0 +1,93 @@
+# This workflow deploys code merged to develop branch to the CI sandbox
+name: feature-ci_deploy
+
+on:
+  push:
+    branches:
+      - "develop"
+
+jobs:
+  pr-validation:
+    runs-on: ubuntu-latest
+    environment: CI
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Salesforce CLI
+        run: npm install --global @salesforce/cli
+
+      - name: Install sfdx-git-delta plugin
+        run: echo 'y' | sf plugins install sfdx-git-delta
+
+      - name: Authenticate to sandbox org (SFDX URL)
+        env:
+          SFDX_URL: ${{ secrets.SFDX_URL }}
+        run: |
+          if [ -z "$SFDX_URL" ]; then
+            echo "Missing required secret: SFDX_URL"
+            exit 1
+          fi
+
+          echo "$SFDX_URL" > ./sfdx_auth_url.txt
+          sf org login sfdx-url \
+            --sfdx-url-file ./sfdx_auth_url.txt \
+            --alias sandbox \
+            --set-default
+          rm -f ./sfdx_auth_url.txt
+
+      - name: Verify authenticated org
+        run: sf org list --all
+
+      - name: Build delta package
+        id: delta-package
+        run: |
+          mkdir -p delta/force-app
+          sf sgd source delta \
+            --from "HEAD" \
+            --to "HEAD~1" \
+            --output-dir delta \
+            --source-dir force-app \
+            --generate-delta
+
+          manifest_path="delta/package/package.xml"
+          source_dir="delta/force-app"
+          post_destructive_path="delta/destructiveChanges/destructiveChanges.xml"
+
+          has_delta=false
+
+          if [ -f "$manifest_path" ] && grep -q "<types>" "$manifest_path"; then
+            has_delta=true
+          fi
+
+          if [ -f "$post_destructive_path" ] && grep -q "<types>" "$post_destructive_path"; then
+            has_delta=true
+          else
+            post_destructive_path=""
+          fi
+
+          if [ "$has_delta" != "true" ]; then
+            echo "No metadata changes detected in delta package."
+          fi
+
+          echo "has_delta=$has_delta" >> "$GITHUB_OUTPUT"
+          echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
+          echo "source_dir=$source_dir" >> "$GITHUB_OUTPUT"
+          echo "post_destructive_path=$post_destructive_path" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy build
+        run: |
+          if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
+            echo "Skipping validation because there are no delta changes."
+            exit 0
+          fi
+
+          sf project deploy start --target-org sandbox --manifest "${{ steps.delta-package.outputs.manifest_path }}" --test-level "${{ vars.TEST_LEVEL }}" --wait 60

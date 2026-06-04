@@ -24,8 +24,11 @@ jobs:
       - name: Install Salesforce CLI
         run: npm install --global @salesforce/cli
 
+      - name: Install code-analyzer plugin
+        run: sf plugins install code-analyzer
+
       - name: Install sfdx-git-delta plugin
-        run: sf plugins install sfdx-git-delta
+        run: echo 'y' | sf plugins install sfdx-git-delta
 
       - name: Authenticate to sandbox org (SFDX URL)
         env:
@@ -46,5 +49,95 @@ jobs:
       - name: Verify authenticated org
         run: sf org list --all
 
+      - name: Build delta package
+        id: delta-package
+        run: |
+          mkdir -p delta/force-app
+          sf sgd source delta \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --output-dir delta \
+            --source-dir force-app \
+            --generate-delta
+
+          manifest_path="delta/package/package.xml"
+          source_dir="delta/force-app"
+          post_destructive_path="delta/destructiveChanges/destructiveChanges.xml"
+
+          has_delta=false
+
+          if [ -f "$manifest_path" ] && grep -q "<types>" "$manifest_path"; then
+            has_delta=true
+          fi
+
+          if [ -f "$post_destructive_path" ] && grep -q "<types>" "$post_destructive_path"; then
+            has_delta=true
+          else
+            post_destructive_path=""
+          fi
+
+          if [ "$has_delta" != "true" ]; then
+            echo "No metadata changes detected in delta package."
+          fi
+
+          echo "has_delta=$has_delta" >> "$GITHUB_OUTPUT"
+          echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
+          echo "source_dir=$source_dir" >> "$GITHUB_OUTPUT"
+          echo "post_destructive_path=$post_destructive_path" >> "$GITHUB_OUTPUT"
+
+      - name: Build Apex test class list
+        id: apex-tests
+        run: |
+          if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
+            echo "No delta changes to validate."
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "test_classes=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          mapfile -t test_files < <(find "${{ steps.delta-package.outputs.source_dir }}" -type f -name '*TEST*.cls' | sort)
+
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "No Apex test classes matching '*TEST*.cls' were found in ${{ steps.delta-package.outputs.source_dir }}."
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+            echo "test_classes=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          test_classes=$(printf '%s\n' "${test_files[@]}" \
+            | sed -E 's|.*/([^/]+)\.cls$|\1|' \
+            | paste -sd, -)
+
+          echo "Found Apex test classes: $test_classes"
+          echo "has_tests=true" >> "$GITHUB_OUTPUT"
+          echo "test_classes=$test_classes" >> "$GITHUB_OUTPUT"
+
+      - name: Run Code Analyzer
+        run: |
+          if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
+            echo "Skipping validation because there are no delta changes."
+            exit 0
+          fi
+
+          sf code-analyzer run --workspace "${{ steps.delta-package.outputs.source_dir }}" --config-file code-analyzer.yml --severity-threshold 2
+
       - name: Validate build
-        run: sf project deploy start --dry-run --test-level ${{ env.TEST_LEVEL }} --target-org sandbox --source-dir force-app
+        run: |
+          if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
+            echo "Skipping validation because there are no delta changes."
+            exit 0
+          fi
+
+          deploy_cmd=(sf project deploy start --dry-run --target-org sandbox --manifest "${{ steps.delta-package.outputs.manifest_path }}")
+
+          if [ -n "${{ steps.delta-package.outputs.post_destructive_path }}" ]; then
+            deploy_cmd+=(--post-destructive-changes "${{ steps.delta-package.outputs.post_destructive_path }}")
+          fi
+
+          if [ "${{ steps.apex-tests.outputs.has_tests }}" = "true" ]; then
+            deploy_cmd+=(--test-level RunSpecifiedTests --tests "${{ steps.apex-tests.outputs.test_classes }}")
+          else
+            deploy_cmd+=(--test-level "${{ vars.TEST_LEVEL }}")
+          fi
+
+          "${deploy_cmd[@]}"
