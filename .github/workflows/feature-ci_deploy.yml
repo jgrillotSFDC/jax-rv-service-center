@@ -26,7 +26,7 @@ jobs:
         run: npm install --global @salesforce/cli
 
       - name: Install sfdx-git-delta plugin
-        run: sf plugins install sfdx-git-delta
+        run: echo 'y' | sf plugins install sfdx-git-delta
 
       - name: Authenticate to sandbox org (SFDX URL)
         env:
@@ -47,5 +47,47 @@ jobs:
       - name: Verify authenticated org
         run: sf org list --all
 
-      - name: Validate build
-        run: sf project deploy start --test-level ${{ vars.TEST_LEVEL }} --target-org sandbox --source-dir force-app
+      - name: Build delta package
+        id: delta-package
+        run: |
+          mkdir -p delta/force-app
+          sf sgd source delta \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --output-dir delta \
+            --source-dir force-app \
+            --generate-delta
+
+          manifest_path="delta/package/package.xml"
+          source_dir="delta/force-app"
+          post_destructive_path="delta/destructiveChanges/destructiveChanges.xml"
+
+          has_delta=false
+
+          if [ -f "$manifest_path" ] && grep -q "<types>" "$manifest_path"; then
+            has_delta=true
+          fi
+
+          if [ -f "$post_destructive_path" ] && grep -q "<types>" "$post_destructive_path"; then
+            has_delta=true
+          else
+            post_destructive_path=""
+          fi
+
+          if [ "$has_delta" != "true" ]; then
+            echo "No metadata changes detected in delta package."
+          fi
+
+          echo "has_delta=$has_delta" >> "$GITHUB_OUTPUT"
+          echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
+          echo "source_dir=$source_dir" >> "$GITHUB_OUTPUT"
+          echo "post_destructive_path=$post_destructive_path" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy build
+        run: |
+          if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
+            echo "Skipping validation because there are no delta changes."
+            exit 0
+          fi
+
+          sf project deploy start --target-org sandbox --manifest "${{ steps.delta-package.outputs.manifest_path }}" --test-level "${{ vars.TEST_LEVEL }}" --wait 60
