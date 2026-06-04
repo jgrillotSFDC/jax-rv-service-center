@@ -19,10 +19,6 @@
             <default>false</default>
         </values>
         <values>
-            <fullName>Purchased List</fullName>
-            <default>false</default>
-        </values>
-        <values>
             <fullName>Web</fullName>
             <default>false</default>
         </values>
