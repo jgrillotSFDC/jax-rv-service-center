@@ -25,7 +25,7 @@ jobs:
         run: npm install --global @salesforce/cli
 
       - name: Install code-analyzer plugin
-        run: sf plugins install @salesforce/code-analyzer
+        run: sf plugins install code-analyzer
 
       - name: Install sfdx-git-delta plugin
         run: sf plugins install sfdx-git-delta
