@@ -119,7 +119,7 @@ jobs:
             exit 0
           fi
 
-          sf code-analyzer run --source-dir "${{ steps.delta-package.outputs.source_dir }}" --config-file code-analyzer.yml --severity-threshold 2
+          sf code-analyzer run --workspace"${{ steps.delta-package.outputs.source_dir }}" --config-file code-analyzer.yml --severity-threshold 2
 
       - name: Validate build
         run: |
