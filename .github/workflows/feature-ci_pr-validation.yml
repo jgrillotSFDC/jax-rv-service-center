@@ -28,7 +28,7 @@ jobs:
         run: sf plugins install code-analyzer
 
       - name: Install sfdx-git-delta plugin
-        run: sf plugins install sfdx-git-delta
+        run: echo 'y' | sf plugins install sfdx-git-delta
 
       - name: Authenticate to sandbox org (SFDX URL)
         env:
