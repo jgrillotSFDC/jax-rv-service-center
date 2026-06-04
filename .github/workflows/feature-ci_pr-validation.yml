@@ -111,6 +111,15 @@ jobs:
           echo "has_tests=true" >> "$GITHUB_OUTPUT"
           echo "test_classes=$test_classes" >> "$GITHUB_OUTPUT"
 
+      - name: Run Code Analyzer
+        run: |
+          if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
+            echo "Skipping validation because there are no delta changes."
+            exit 0
+          fi
+
+          sf code analyze run --source-dir "${{ steps.delta-package.outputs.source_dir }}" --config-file code-analyzer.yml --severity-threshold 2
+
       - name: Validate build
         run: |
           if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
