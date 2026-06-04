@@ -52,6 +52,7 @@ jobs:
       - name: Build delta package
         id: delta-package
         run: |
+          mkdir -p delta/force-app
           sf sgd source delta \
             --from "${{ github.event.pull_request.base.sha }}" \
             --to "${{ github.event.pull_request.head.sha }}" \
