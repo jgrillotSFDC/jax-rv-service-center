@@ -1,8 +1,8 @@
 // Test Class to create a Customer and Rig record
-@isTest
+@IsTest
 public class RigRecordTEST {
   @TestSetup
-  static void AccountData() {
+  static void accountData() {
     // Create a Person Account
     Id personRT = Schema.SObjectType.Account.getRecordTypeInfosByName()
       .get('Person Account')
@@ -15,7 +15,7 @@ public class RigRecordTEST {
     insert personCustomer;
   }
 
-  @isTest
+  @IsTest
   static void validateCustomer() {
     // Validate that the person account was created
     Test.startTest();
