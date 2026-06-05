@@ -64,12 +64,11 @@ jobs:
                 --set-default-dev-hub
               rm -f ./sfdx_auth_url.txt
 
-              cat > ./scratch-def.json <<'EOF'
-              {
-                "orgName": "PR Validation",
-                "edition": "Developer"
-              }
-              EOF
+              printf '%s\n' \
+                '{' \
+                '  "orgName": "PR Validation",' \
+                '  "edition": "Developer"' \
+                '}' > ./scratch-def.json
 
               sf org create scratch \
                 --target-dev-hub devhubprod \
