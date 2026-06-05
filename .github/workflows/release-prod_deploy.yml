@@ -1,12 +1,12 @@
-name: release-prod_pr-validation
+name: release-prod_deploy
 # This workflow validates the pull request to main
 on:
-  pull_request:
+  push:
     branches:
       - "main"
 
 jobs:
-  pr-validation:
+  deployment:
     runs-on: ubuntu-latest
     environment: PROD
 
@@ -27,83 +27,21 @@ jobs:
       - name: Install sfdx-git-delta plugin
         run: echo 'y' | sf plugins install sfdx-git-delta
 
-      - name: Configure validation org
-        id: validation-org
+      - name: Authenticate to sandbox org (SFDX URL)
         env:
           SFDX_URL: ${{ secrets.SFDX_URL }}
-          SANDBOX_URL: ${{ secrets.SANDBOX_URL }}
-          STAGING_ENV: ${{ vars.staging || vars.STAGING || 'prod' }}
         run: |
-          staging_env="$(printf '%s' "$STAGING_ENV" | tr '[:upper:]' '[:lower:]')"
+          if [ -z "$SFDX_URL" ]; then
+            echo "Missing required secret: SFDX_URL"
+            exit 1
+          fi
 
-          case "$staging_env" in
-            sandbox)
-              if [ -z "$SANDBOX_URL" ]; then
-                echo "Missing required secret for sandbox validation: SANDBOX_URL"
-                exit 1
-              fi
-
-              echo "$SANDBOX_URL" > ./sandbox_auth_url.txt
-              sf org login sfdx-url \
-                --sfdx-url-file ./sandbox_auth_url.txt \
-                --alias stagingSandbox \
-                --set-default
-              rm -f ./sandbox_auth_url.txt
-              target_org="stagingSandbox"
-              ;;
-            scratchorg)
-              if [ -z "$SFDX_URL" ]; then
-                echo "Missing required secret for scratch org creation: SFDX_URL"
-                exit 1
-              fi
-
-              echo "$SFDX_URL" > ./sfdx_auth_url.txt
-              sf org login sfdx-url \
-                --sfdx-url-file ./sfdx_auth_url.txt \
-                --alias devhubprod \
-                --set-default-dev-hub
-              rm -f ./sfdx_auth_url.txt
-
-              cat > ./scratch-def.json <<'EOF'
-              {
-                "orgName": "PR Validation",
-                "edition": "Developer"
-              }
-              EOF
-
-              sf org create scratch \
-                --target-dev-hub devhubprod \
-                --definition-file ./scratch-def.json \
-                --alias prValidationScratch \
-                --duration-days 7 \
-                --wait 30 \
-                --set-default
-              rm -f ./scratch-def.json
-              target_org="prValidationScratch"
-              ;;
-            prod|"")
-              if [ -z "$SFDX_URL" ]; then
-                echo "Missing required secret for prod validation: SFDX_URL"
-                exit 1
-              fi
-
-              echo "$SFDX_URL" > ./sfdx_auth_url.txt
-              sf org login sfdx-url \
-                --sfdx-url-file ./sfdx_auth_url.txt \
-                --alias devhubprod \
-                --set-default-dev-hub \
-                --set-default
-              rm -f ./sfdx_auth_url.txt
-              target_org="devhubprod"
-              ;;
-            *)
-              echo "Invalid vars.staging value: '$STAGING_ENV'. Expected one of: sandbox, scratchOrg, prod."
-              exit 1
-              ;;
-          esac
-
-          echo "staging_env=$staging_env" >> "$GITHUB_OUTPUT"
-          echo "target_org=$target_org" >> "$GITHUB_OUTPUT"
+          echo "$SFDX_URL" > ./sfdx_auth_url.txt
+          sf org login sfdx-url \
+            --sfdx-url-file ./sfdx_auth_url.txt \
+            --alias prod \
+            --set-default
+          rm -f ./sfdx_auth_url.txt
 
       - name: Verify authenticated org
         run: sf org list --all
@@ -124,8 +62,8 @@ jobs:
 
           mkdir -p delta/force-app
           sf sgd source delta \
-            --from "${{ github.event.pull_request.base.sha }}" \
-            --to "${{ github.event.pull_request.head.sha }}" \
+            --from "HEAD" \
+            --to "HEAD~1" \
             --output-dir delta \
             --source-dir force-app \
             --generate-delta
@@ -182,19 +120,19 @@ jobs:
           echo "has_tests=true" >> "$GITHUB_OUTPUT"
           echo "test_classes=$test_classes" >> "$GITHUB_OUTPUT"
 
-      - name: Validate build
+      - name: Deploy build
         run: |
           full_build_flag="$(printf '%s' "${{ vars.FULL_BUILD }}" | tr '[:upper:]' '[:lower:]')"
 
           if [ "$full_build_flag" = "true" ]; then
-            deploy_cmd=(sf project deploy start --dry-run --target-org "${{ steps.validation-org.outputs.target_org }}" --source-dir "${{ steps.delta-package.outputs.source_dir }}")
+            deploy_cmd=(sf project deploy start --target-org prod --source-dir "${{ steps.delta-package.outputs.source_dir }}")
           else
             if [ "${{ steps.delta-package.outputs.has_delta }}" != "true" ]; then
               echo "Skipping validation because there are no delta changes."
               exit 0
             fi
 
-            deploy_cmd=(sf project deploy start --dry-run --target-org "${{ steps.validation-org.outputs.target_org }}" --manifest "${{ steps.delta-package.outputs.manifest_path }}")
+            deploy_cmd=(sf project deploy start --target-org prod --manifest "${{ steps.delta-package.outputs.manifest_path }}")
 
             if [ -n "${{ steps.delta-package.outputs.post_destructive_path }}" ]; then
               deploy_cmd+=(--post-destructive-changes "${{ steps.delta-package.outputs.post_destructive_path }}")
@@ -208,10 +146,3 @@ jobs:
           fi
 
           "${deploy_cmd[@]}"
-
-      - name: Delete scratch org
-        if: ${{ always() && steps.validation-org.outputs.staging_env == 'scratchorg' }}
-        run: |
-          sf org delete scratch \
-            --target-org "${{ steps.validation-org.outputs.target_org }}" \
-            --no-prompt || true
