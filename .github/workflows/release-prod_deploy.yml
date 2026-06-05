@@ -5,6 +5,9 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: write
+
 jobs:
   deployment:
     runs-on: ubuntu-latest
@@ -146,3 +149,44 @@ jobs:
           fi
 
           "${deploy_cmd[@]}"
+
+      - name: Build release metadata and notes
+        id: release-metadata
+        run: |
+          before_sha="${{ github.event.before }}"
+          after_sha="${{ github.sha }}"
+
+          if [ "$before_sha" = "0000000000000000000000000000000000000000" ]; then
+            commit_range="$after_sha"
+          else
+            commit_range="$before_sha..$after_sha"
+          fi
+
+          timestamp="$(date -u +'%Y-%m-%d %H:%M UTC')"
+          short_sha="${after_sha:0:7}"
+          tag_name="prod-release-${{ github.run_number }}-${short_sha}"
+          release_name="Production Release ${timestamp} (${short_sha})"
+          notes_file="release-notes.md"
+
+          {
+            echo "## Commits included in this deployment"
+            echo
+            git log --reverse --pretty=format:'- %s (%h)' "$commit_range"
+            echo
+            echo
+            echo "Deployed commit: \`$after_sha\`"
+          } > "$notes_file"
+
+          echo "tag_name=$tag_name" >> "$GITHUB_OUTPUT"
+          echo "release_name=$release_name" >> "$GITHUB_OUTPUT"
+          echo "notes_file=$notes_file" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release-metadata.outputs.tag_name }}
+          name: ${{ steps.release-metadata.outputs.release_name }}
+          body_path: ${{ steps.release-metadata.outputs.notes_file }}
+          target_commitish: ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
