@@ -46,3 +46,11 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+# VSCode
+.vscode/
+package-lock.json
+
+# Salesforce Org Metadata
+**/profiles/
+**/AppMenus/
