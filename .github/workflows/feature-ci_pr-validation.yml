@@ -95,10 +95,10 @@ jobs:
             exit 0
           fi
 
-          mapfile -t test_files < <(find "${{ steps.delta-package.outputs.source_dir }}" -type f -name '*TEST*.cls' | sort)
+          mapfile -t test_files < <(find "${{ steps.delta-package.outputs.source_dir }}" -type f -name '*TEST.cls' | sort)
 
           if [ "${#test_files[@]}" -eq 0 ]; then
-            echo "No Apex test classes matching '*TEST*.cls' were found in ${{ steps.delta-package.outputs.source_dir }}."
+            echo "No Apex test classes matching '*TEST.cls' were found in ${{ steps.delta-package.outputs.source_dir }}."
             echo "has_tests=false" >> "$GITHUB_OUTPUT"
             echo "test_classes=" >> "$GITHUB_OUTPUT"
             exit 0
