@@ -232,17 +232,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Rig__c.Manufacturer__c</field>
+        <field>rv_Rig__c.Manufacturer__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Rig__c.Model__c</field>
+        <field>rv_Rig__c.Model__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Rig__c.VIN__c</field>
+        <field>rv_Rig__c.VIN__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
@@ -273,7 +273,7 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
-        <object>Rig__c</object>
+        <object>rv_Rig__c</object>
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
@@ -290,7 +290,7 @@
         <visible>true</visible>
     </recordTypeVisibilities>
     <tabSettings>
-        <tab>Rig__c</tab>
+        <tab>rv_Rig__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>

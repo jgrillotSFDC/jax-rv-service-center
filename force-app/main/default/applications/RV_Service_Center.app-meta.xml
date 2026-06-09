@@ -16,7 +16,7 @@
     <label>RV Service Center</label>
     <navType>Standard</navType>
     <tabs>standard-Account</tabs>
-    <tabs>Rig__c</tabs>
+    <tabs>rv_Rig__c</tabs>
     <tabs>standard-report</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>RV_Service_Center_UtilityBar</utilityBar>
