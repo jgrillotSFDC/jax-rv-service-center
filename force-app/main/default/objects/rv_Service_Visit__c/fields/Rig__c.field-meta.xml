@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Rig__c</fullName>
+    <description>Rig related to service request</description>
+    <label>Rig</label>
+    <referenceTo>rv_Rig__c</referenceTo>
+    <relationshipLabel>Service Visits</relationshipLabel>
+    <relationshipName>Service_Visits</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>
