@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Warranty_Work__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Visit covered by Warranty</description>
+    <inlineHelpText
+  >Covered by Work - create another visit if mixed of warranty/non-warranty work.</inlineHelpText>
+    <label>Warranty Work</label>
+    <trackFeedHistory>true</trackFeedHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

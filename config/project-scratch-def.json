@@ -1,7 +1,8 @@
 {
-  "orgName": "jgrillot company",
-  "edition": "Developer",
+  "orgName": "jax rv center",
+  "sourceOrg": "00DHu00000z6krf",
   "features": ["EnableSetPasswordInApi"],
+  "adminEmail": "jgrillot@salesforce.com",
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
