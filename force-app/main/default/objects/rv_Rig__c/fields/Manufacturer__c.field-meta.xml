@@ -15,7 +15,7 @@
     </lookupFilter>
     <referenceTo>Account</referenceTo>
     <relationshipLabel>Rigs (Manufacturer)</relationshipLabel>
-    <relationshipName>Rigs_Vendor</relationshipName>
+    <relationshipName>Rigs_Manufacturer</relationshipName>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>

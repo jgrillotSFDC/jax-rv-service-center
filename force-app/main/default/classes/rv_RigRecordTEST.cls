@@ -1,6 +1,6 @@
 // Test Class to create a Customer and Rig record
 @IsTest
-public class RigRecordTEST {
+public class rv_RigRecordTEST {
   @TestSetup
   static void accountData() {
     // Create a Person Account

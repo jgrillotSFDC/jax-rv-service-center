@@ -246,7 +246,7 @@
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
-        <relatedList>Rig__c.Manufacturer__c</relatedList>
+        <relatedList>rv_Rig__c.Manufacturer__c</relatedList>
     </relatedLists>
     <relatedObjects>ParentId</relatedObjects>
     <showEmailCheckbox>false</showEmailCheckbox>

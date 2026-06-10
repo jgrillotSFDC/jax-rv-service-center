@@ -5,7 +5,7 @@
     <label>Account</label>
     <referenceTo>Account</referenceTo>
     <relationshipLabel>Rigs</relationshipLabel>
-    <relationshipName>Rigs</relationshipName>
+    <relationshipName>Rigs_Owner</relationshipName>
     <relationshipOrder>0</relationshipOrder>
     <reparentableMasterDetail>true</reparentableMasterDetail>
     <trackTrending>false</trackTrending>
